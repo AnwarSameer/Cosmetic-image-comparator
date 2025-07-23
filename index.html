@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Preops to Postops Image Comparison</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Poppins font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS for the entire page and image comparison slider */
+        body {
+            font-family: "Poppins", sans-serif;
+            background-color: #282828; /* Dark background for the entire page */
+            color: #f0f0f0; /* Light text color for general page elements */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            font-family: "Poppins", sans-serif;
+            text-transform: uppercase;
+            padding: 0;
+            margin: 0;
+            margin-top: 40px;
+            letter-spacing: 4px;
+            color: #e43434;
+            font-size: 3.5rem;
+        }
+
+        .upload-section {
+            background-color: #333333; /* Darker background for the upload card */
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Stronger shadow for dark theme */
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 900px; /* Max-width for the upload section */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .file-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 300px; /* Decreased max-width for smaller file input fields */
+        }
+
+        .file-input-group label {
+            font-weight: 600;
+            color: #f0f0f0; /* Light label text for dark background */
+        }
+
+        .file-input-group input[type="file"] {
+            border: 1px solid #555555; /* Darker border */
+            padding: 8px; /* Slightly reduced padding */
+            border-radius: 8px;
+            background-color: #444444; /* Darker input background */
+            color: #f0f0f0; /* Input text color */
+            cursor: pointer;
+        }
+        /* Style for file input button (browser-specific) */
+        .file-input-group input[type="file"]::-webkit-file-upload-button {
+            background-color: #e43434;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .file-input-group input[type="file"]::-webkit-file-upload-button:hover {
+            background-color: #c22b2b;
+        }
+
+
+        .compare-button, .analyze-button, .book-now-button {
+            background-color: #e43434;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 10px rgba(228, 52, 52, 0.3);
+            margin-top: 10px; /* Space between buttons */
+            text-decoration: none; /* Remove underline for anchor tag */
+            display: inline-block; /* Allow padding and margin for anchor tag */
+        }
+
+        .compare-button:hover, .analyze-button:hover, .book-now-button:hover {
+            background-color: #c22b2b;
+        }
+
+        .image-comparison {
+            max-width: 1800px; /* Increased max-width for an even larger comparison space */
+            margin: 20px auto;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            background-color: #333333; /* Dark background for the comparison card itself */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Stronger shadow for dark theme */
+        }
+
+        .image-comparison .images-container {
+            position: relative;
+            display: flex;
+            width: 100%;
+        }
+
+        .image-comparison img {
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            object-position: left;
+        }
+
+        /* The .before-image acts as the sliding overlay */
+        .image-comparison .images-container .before-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 50%; /* Initial state: 50% of the before image is visible */
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        /* The .after-image acts as the static background image */
+        .image-comparison .images-container .after-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .image-comparison .slider-line {
+            position: absolute;
+            height: 100%;
+            width: 1px; /* Even thinner line */
+            background: #fff;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+        }
+
+        .image-comparison .slider-icon {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 60px;
+            height: 60px;
+            color: #fff;
+            transform: translate(-50%, -50%);
+            background-color: #e43434; /* Match theme color */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: ns-resize; /* Up/down arrow cursor */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); /* Stronger shadow for dark theme */
+            z-index: 30;
+            transition: background-color 0.3s ease;
+        }
+
+        .slider-icon:hover {
+            background-color: #c22b2b; /* Darker red on hover */
+        }
+
+        .slider-icon svg {
+            width: 30px;
+            height: 30px;
+            color: #ffffff;
+        }
+
+        .image-comparison .slider {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 40;
+        }
+
+        /* Hide native slider thumb */
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 0;
+            height: 0;
+        }
+        .slider::-moz-range-thumb {
+            width: 0;
+            height: 0;
+            border: none;
+        }
+
+        /* Fallback placeholder images */
+        .before-image[src=""], .before-image:not([src]) {
+            content: url("https://placehold.co/800x600/fecaca/dc2626?text=Before+Image");
+        }
+        .after-image[src=""], .after-image:not([src]) {
+            content: url("https://placehold.co/800x600/fee2e2/ef4444?text=After+Image");
+        }
+
+        .analysis-section {
+            background-color: #333333;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            margin-top: 30px;
+            width: 100%;
+            max-width: 1800px;
+            text-align: center;
+        }
+
+        .analysis-section h2 {
+            color: #e43434;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .analysis-content {
+            color: #f0f0f0;
+            font-size: 1rem;
+            line-height: 1.6;
+            text-align: left;
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #e43434; /* Red */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none; /* Hidden by default */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .disclaimer {
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-top: 20px;
+            text-align: center;
+            max-width: 800px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            h1 {
+                font-size: 1.8rem;
+                margin-top: 20px;
+                letter-spacing: 2px;
+            }
+            .upload-section {
+                padding: 15px;
+                gap: 10px;
+            }
+            .file-input-group {
+                max-width: 100%; /* Allow full width on small screens */
+            }
+            .compare-button, .analyze-button, .book-now-button {
+                padding: 10px 20px;
+            }
+            .image-comparison {
+                padding: 0.5rem;
+            }
+            .slider-icon {
+                width: 50px;
+                height: 50px;
+            }
+            .slider-icon svg {
+                width: 28px;
+                height: 28px;
+            }
+            .analysis-section {
+                padding: 15px;
+            }
+            .analysis-section h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Preops to Postops</h1>
+
+    <div class="upload-section">
+        <div class="file-input-group">
+            <label for="beforeImageUpload">Upload Before Image:</label>
+            <input type="file" id="beforeImageUpload" accept="image/*" />
+        </div>
+        <div class="file-input-group">
+            <label for="afterImageUpload">Upload After Image:</label>
+            <input type="file" id="afterImageUpload" accept="image/*" />
+        </div>
+        <button id="compareButton" class="compare-button">Compare Images</button>
+        <button id="analyzeButton" class="analyze-button">Report on surgery</button>
+    </div>
+
+    <div class="image-comparison">
+        <div class="images-container">
+            <!-- Initial images (can be placeholders or default) -->
+            <img class="after-image" src="https://tunctiryaki.co.uk/assets/components/phpthumbof/cache/image.82eac440.45a863d44373f02b35e841292d0d02ee.fb81fe53608e0649cdc27e7cd10a2b03.webp" alt="After Image" />
+            <!-- The 'before' image is now the sliding overlay image -->
+            <img class="before-image" src="https://tunctiryaki.co.uk/assets/components/phpthumbof/cache/image.5b97da0c.45a863d44373f02b35e841292d0d02ee.fb81fe53608e0649cdc27e7cd10a2b03.webp" alt="Before Image" />
+
+            <div class="slider-line"></div>
+            <div class="slider-icon">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-6 h-6"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"
+                    />
+                </svg>
+            </div>
+
+            <input type="range" class="slider" min="0" max="100" value="50" />
+        </div>
+    </div>
+
+    <div class="analysis-section" style="display: none;">
+        <h2>Report on surgery</h2>
+        <div class="loading-spinner" id="analysisLoadingSpinner"></div>
+        <p class="analysis-content" id="aiAnalysisResult"></p>
+        <p class="disclaimer">Disclaimer: This AI analysis is for informational and demonstration purposes only and should not be considered medical advice or a substitute for professional consultation.</p>
+    </div>
+
+    <!-- New "Book Now for consultation" button section -->
+    <div class="book-now-section mt-10">
+        <a href="https://alphahospitalgroup.co.uk/booking/" target="_blank" class="book-now-button">Book Now</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slider = document.querySelector('.slider');
+            const beforeImage = document.querySelector('.before-image');
+            const afterImage = document.querySelector('.after-image');
+            const sliderLine = document.querySelector('.slider-line');
+            const sliderIcon = document.querySelector('.slider-icon');
+            const imagesContainer = document.querySelector('.images-container');
+
+            const beforeImageUpload = document.getElementById('beforeImageUpload');
+            const afterImageUpload = document.getElementById('afterImageUpload');
+            const compareButton = document.getElementById('compareButton');
+            const analyzeButton = document.getElementById('analyzeButton'); // New AI analysis button
+            const analysisSection = document.querySelector('.analysis-section'); // New analysis section
+            const aiAnalysisResult = document.getElementById('aiAnalysisResult'); // Where AI result goes
+            const analysisLoadingSpinner = document.getElementById('analysisLoadingSpinner'); // Loading spinner
+
+            // Function to update the slider position and image width
+            function updateSlider(value) {
+                value = Math.max(0, Math.min(100, value));
+                beforeImage.style.width = `${value}%`;
+                sliderLine.style.left = `${value}%`;
+                sliderIcon.style.left = `${value}%`;
+            }
+
+            // Initialize slider position based on its default value (50)
+            updateSlider(slider.value);
+
+            // Event listener for input range changes (for keyboard/programmatic changes)
+            slider.addEventListener('input', (e) => {
+                updateSlider(e.target.value);
+            });
+
+            // --- Mouse and Touch Dragging Logic for the Slider Icon ---
+            let isDragging = false;
+
+            const startDragging = (e) => {
+                isDragging = true;
+                document.body.classList.add('select-none');
+            };
+
+            const stopDragging = () => {
+                isDragging = false;
+                document.body.classList.remove('select-none');
+            };
+
+            const doDragging = (e) => {
+                if (!isDragging) return;
+
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const containerRect = imagesContainer.getBoundingClientRect();
+                let newX = clientX - containerRect.left;
+                let percentage = (newX / containerRect.width) * 100;
+
+                updateSlider(percentage);
+                slider.value = percentage; // Keep the range input value in sync
+            };
+
+            sliderIcon.addEventListener('mousedown', startDragging);
+            sliderIcon.addEventListener('touchstart', startDragging);
+            window.addEventListener('mouseup', stopDragging);
+            window.addEventListener('touchend', stopDragging);
+            window.addEventListener('mousemove', doDragging);
+            window.addEventListener('touchmove', doDragging);
+
+            // --- Image Upload Logic ---
+            compareButton.addEventListener('click', () => {
+                const beforeFile = beforeImageUpload.files[0];
+                const afterFile = afterImageUpload.files[0];
+
+                if (!beforeFile || !afterFile) {
+                    alert('Please upload both a "Before" and an "After" image to compare.');
+                    return;
+                }
+
+                const readerBefore = new FileReader();
+                readerBefore.onload = (e) => {
+                    beforeImage.src = e.target.result;
+                    updateSlider(50);
+                    slider.value = 50;
+                };
+                readerBefore.readAsDataURL(beforeFile);
+
+                const readerAfter = new FileReader();
+                readerAfter.onload = (e) => {
+                    afterImage.src = e.target.result;
+                };
+                readerAfter.readAsDataURL(afterFile);
+
+                // Hide analysis section when new images are loaded
+                analysisSection.style.display = 'none';
+                aiAnalysisResult.textContent = '';
+            });
+
+            // --- Gemini API Integration for Image Analysis ---
+            analyzeButton.addEventListener('click', async () => {
+                const beforeSrc = beforeImage.src;
+                const afterSrc = afterImage.src;
+
+                // Check if images are loaded (not placeholders or broken links)
+                if (beforeSrc.includes('placehold.co') || afterSrc.includes('placehold.co') ||
+                    !beforeSrc.startsWith('data:') || !afterSrc.startsWith('data:')) {
+                    alert('Please upload your "Before" and "After" images first using the upload fields.');
+                    return;
+                }
+
+                analysisSection.style.display = 'block'; // Show the analysis section
+                aiAnalysisResult.textContent = ''; // Clear previous results
+                analysisLoadingSpinner.style.display = 'block'; // Show spinner
+
+                try {
+                    // Extract base64 data and mimeType from the data URI
+                    const getBase64AndMime = (dataUri) => {
+                        const parts = dataUri.split(',');
+                        const mimeType = parts[0].split(':')[1].split(';')[0];
+                        const base64Data = parts[1];
+                        return { mimeType, base64Data };
+                    };
+
+                    const { mimeType: beforeMime, base64Data: beforeBase64 } = getBase64AndMime(beforeSrc);
+                    const { mimeType: afterMime, base64Data: afterBase64 } = getBase64AndMime(afterSrc);
+
+                    const prompt = "Analyze the visual differences and changes between the 'Before' image and the 'After' image. Describe what appears to have changed or been enhanced. Focus purely on visual observations.";
+
+                    const chatHistory = [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: prompt },
+                                { inlineData: { mimeType: beforeMime, data: beforeBase64 } },
+                                { inlineData: { mimeType: afterMime, data: afterBase64 } }
+                            ]
+                        }
+                    ];
+
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; // Canvas will automatically provide the API key at runtime
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        aiAnalysisResult.textContent = text;
+                    } else {
+                        aiAnalysisResult.textContent = "Could not get a valid analysis from the AI. Please try again.";
+                        console.error("Unexpected API response structure:", result);
+                    }
+
+                } catch (error) {
+                    aiAnalysisResult.textContent = `Error during AI analysis: ${error.message}. Please ensure images are valid and try again.`;
+                    console.error("AI Analysis Error:", error);
+                } finally {
+                    analysisLoadingSpinner.style.display = 'none'; // Hide spinner
+                }
+            });
+
+            // Handle initial image loading errors (for the default images)
+            document.querySelectorAll('.images-container img').forEach(img => {
+                img.onerror = function() {
+                    console.warn(`Failed to load image: ${this.src}. Using placeholder.`);
+                };
+            });
+        });
+    </script>
+</body>
+</html>
