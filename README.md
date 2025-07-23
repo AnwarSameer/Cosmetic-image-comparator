@@ -1,0 +1,1 @@
+# Cosmetic-image-comparator
